@@ -7,7 +7,7 @@
 :- use_module(src/base_board).
 :- use_module(src/board).
 :- use_module(src/make_move).
-:- use_module(src/tactics).
+% :- use_module(src/tactics).
 
 :- unload_file(debug).
 :- unload_file(load).

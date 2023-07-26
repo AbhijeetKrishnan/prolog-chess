@@ -1,0 +1,11 @@
+name: prolog-chess
+channels:
+  - defaults
+dependencies:
+  - python >= 3.8
+  - pip
+  - pip:
+    - chess
+    - tqdm
+    - git+https://github.com/yuce/pyswip@master#egg=pyswip
+    

@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 
-from collections.abc import Iterable
+import argparse
 import os
 import pickle
 import re
 import sys
+from collections.abc import Iterable
 from typing import List, Tuple
 
-import chess, chess.pgn
+import chess
+import chess.pgn
 import pyswip
 from tqdm import tqdm
 
-
-PGN_PATH = os.path.join(os.path.expanduser('~'), 'phd/interpretable-chess-tactics/tactics/data/lichess_db_standard_rated_2013-01.pgn')
-TOTAL_POS = 8155127
+STATE_FILE = 'state.pkl'
 
 prolog = pyswip.Prolog()
 prolog.consult('load.pl')
@@ -76,26 +76,31 @@ def get_prolog_legal_moves(board: chess.Board) -> Iterable[chess.Move]:
     legal_moves = map(lambda move: prolog_move_to_uci(move), legal_moves_res)
     return legal_moves
 
-def save_state(offset: int, move_num: int, pos_seen: int) -> None:
+def save_state(offset: int, move_num: int, pos_seen: int, state_file: str=STATE_FILE) -> None:
     state = (offset, move_num, pos_seen)
-    with open('state.pickle', 'wb') as statefile:
+    with open(state_file, 'wb') as statefile:
         pickle.dump(state, statefile)
 
-def load_state() -> Tuple[int, int, int]:
-    with open('state.pickle', 'rb') as statefile:
+def load_state(state_file: str=STATE_FILE) -> Tuple[int, int, int]:
+    with open(state_file, 'rb') as statefile:
         state = pickle.load(statefile)
     return state
 
 if __name__ == '__main__':
-    pgn = open(PGN_PATH, 'r')
-    if os.path.exists('state.pickle'):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--pgn_path', '-p', type=str, default='lichess_db_standard_rated_2013-01.pgn')
+    parser.add_argument('--total_pos', '-n', type=int, default=8155127)
+    args = parser.parse_args()
+
+    pgn = open(args.pgn_path, 'r')
+    if os.path.exists('state.pkl'):
         offset, move_num, pos_seen = load_state()
         pgn.seek(offset)
     else:
         offset = None
         move_num = 0
         pos_seen = 0
-    progress_bar = tqdm(desc='Positions seen', unit='pos', initial=pos_seen-move_num, total=TOTAL_POS)
+    progress_bar = tqdm(desc='Positions seen', unit='pos', initial=pos_seen-move_num, total=args.total_pos)
 
     while game := chess.pgn.read_game(pgn):
         prolog_board = chess.Board()
